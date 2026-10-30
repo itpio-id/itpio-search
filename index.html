@@ -556,10 +556,18 @@
       footer { display: none; }
       @media (max-width: 760px) {
         body { display: flex; }
-        .sidebar { display: none; }
-        .topbar { min-height: 58px; padding: 6px 18px; }
+        .sidebar { display: flex; position: fixed; inset: 0 auto 0 0; z-index: 20; width: 252px; box-shadow: 10px 0 36px rgb(0 0 0 / 12%); transform: translateX(-110%); transition: transform 180ms ease; }
+        .sidebar.is-open { transform: translateX(0); }
+        .topbar { min-height: 58px; padding: 6px 18px; justify-content: flex-end; }
+        .menu-toggle { display: inline-grid; margin-right: auto; }
         main { padding: 80px 20px 58px; }
         .workspace-links { margin-top: 34px; }
+      }
+      .menu-toggle { display: none; width: 40px; height: 40px; place-items: center; border: 1px solid var(--border); border-radius: 50%; color: var(--text); background: var(--surface); cursor: pointer; font-size: 19px; }
+      .menu-backdrop { display: none; }
+      @media (max-width: 760px) {
+        .menu-toggle { display: inline-grid; }
+        .menu-backdrop.is-open { display: block; position: fixed; inset: 0; z-index: 19; border: 0; background: rgb(0 0 0 / 35%); }
       }
     </style>
   </head>
@@ -579,6 +587,7 @@
       <div class="side-bottom">ITPIO Search<br />Pencarian web dengan Google</div>
     </aside>
     <header class="topbar" aria-label="Navigasi utama">
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Buka menu" aria-expanded="false">☰</button>
       <a href="https://mail.google.com/" target="_blank" rel="noreferrer">Gmail</a>
       <a href="https://images.google.com/" target="_blank" rel="noreferrer">Gambar</a>
       <button
@@ -599,6 +608,7 @@
       </button>
       <a class="sign-in" href="https://accounts.google.com/" target="_blank" rel="noreferrer">Masuk</a>
     </header>
+    <button class="menu-backdrop" id="menu-backdrop" type="button" aria-label="Tutup menu"></button>
 
     <main>
       <h1 class="brand" aria-label="ITPIO">
@@ -693,6 +703,18 @@
       const themeToggle = document.querySelector("#theme-toggle");
       const themeColor = document.querySelector('meta[name="theme-color"]');
       const newSearchButton = document.querySelector("#new-search");
+      const menuToggle = document.querySelector("#menu-toggle");
+      const sidebar = document.querySelector(".sidebar");
+      const menuBackdrop = document.querySelector("#menu-backdrop");
+
+      const setMenuOpen = (open) => {
+        sidebar.classList.toggle("is-open", open);
+        menuBackdrop.classList.toggle("is-open", open);
+        menuToggle.setAttribute("aria-expanded", String(open));
+        menuToggle.setAttribute("aria-label", open ? "Tutup menu" : "Buka menu");
+      };
+      menuToggle.addEventListener("click", () => setMenuOpen(!sidebar.classList.contains("is-open")));
+      menuBackdrop.addEventListener("click", () => setMenuOpen(false));
 
       const getSavedTheme = () => {
         try {
