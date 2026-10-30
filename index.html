@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ITPIO Search — halaman pencarian web sederhana dengan hasil dari Google."
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <title>ITPIO Search</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page-bg: #fff;
+        --text: #202124;
+        --text-muted: #5f6368;
+        --text-subtle: #70757a;
+        --text-faint: #9aa0a6;
+        --border: #dadce0;
+        --search-border: #dfe1e5;
+        --surface: #fff;
+        --surface-soft: #f8f9fa;
+        --surface-hover: #f1f3f4;
+        --footer-bg: #f2f2f2;
+        --link: #1a73e8;
+        --primary: #1a73e8;
+        --primary-hover: #1765cc;
+        --primary-text: #fff;
+        --focus: #1a73e8;
+        --search-shadow: 0 1px 6px rgb(32 33 36 / 28%);
+        --button-shadow: 0 1px 1px rgb(0 0 0 / 10%);
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--text);
+        background: var(--page-bg);
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --page-bg: #202124;
+        --text: #e8eaed;
+        --text-muted: #bdc1c6;
+        --text-subtle: #9aa0a6;
+        --text-faint: #9aa0a6;
+        --border: #3c4043;
+        --search-border: #5f6368;
+        --surface: #303134;
+        --surface-soft: #303134;
+        --surface-hover: #3c4043;
+        --footer-bg: #171717;
+        --link: #8ab4f8;
+        --primary: #8ab4f8;
+        --primary-hover: #aecbfa;
+        --primary-text: #202124;
+        --focus: #8ab4f8;
+        --search-shadow: 0 1px 6px rgb(0 0 0 / 60%);
+        --button-shadow: 0 1px 2px rgb(0 0 0 / 35%);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        min-height: 100svh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        color: var(--text);
+        background: var(--page-bg);
+        transition: color 160ms ease, background-color 160ms ease;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .topbar {
+        min-height: 64px;
+        padding: 6px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 22px;
+        font-size: 13px;
+      }
+
+      .topbar a:not(.sign-in) { color: var(--text); }
+
+      .theme-toggle {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        display: inline-grid;
+        place-items: center;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        color: var(--text-muted);
+        background: transparent;
+        cursor: pointer;
+        transition: background-color 140ms ease, color 140ms ease;
+      }
+
+      .theme-toggle:hover { background: var(--surface-hover); }
+      .theme-toggle svg { width: 20px; height: 20px; }
+      :root:not([data-theme="dark"]) .theme-toggle .sun-icon { display: none; }
+      :root[data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+
+      .sign-in {
+        min-height: 36px;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        color: var(--primary-text);
+        background: var(--primary);
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.1px;
+        transition: background-color 140ms ease, box-shadow 140ms ease;
+      }
+
+      .sign-in:hover {
+        background: var(--primary-hover);
+        box-shadow: var(--button-shadow);
+        text-decoration: none;
+      }
+
+      main {
+        width: 100%;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        padding: clamp(56px, 12vh, 112px) 24px 80px;
+      }
+
+      .brand {
+        margin: 0;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        color: #4285f4;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(68px, 12vw, 92px);
+        font-weight: 500;
+        letter-spacing: -0.095em;
+        line-height: 1;
+        user-select: none;
+      }
+
+      .brand span { display: inline-block; }
+      .brand .blue { color: #4285f4; }
+      .brand .red { color: #ea4335; }
+      .brand .yellow { color: #fbbc05; }
+      .brand .green { color: #34a853; }
+
+      .tagline {
+        margin: 14px 0 28px;
+        color: var(--text-muted);
+        font-size: 14px;
+        letter-spacing: 0.15px;
+      }
+
+      .search-form { width: min(100%, 584px); }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .search-box {
+        width: 100%;
+        height: 48px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--search-border);
+        border-radius: 28px;
+        background: var(--surface);
+        transition: border-color 150ms ease, box-shadow 150ms ease, background-color 160ms ease;
+      }
+
+      .search-box:hover,
+      .search-box:focus-within {
+        border-color: transparent;
+        box-shadow: var(--search-shadow);
+      }
+
+      .search-icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+        color: var(--text-faint);
+      }
+
+      .query {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        color: var(--text);
+        background: transparent;
+        font: inherit;
+        font-size: 16px;
+      }
+
+      .clear-query {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        color: var(--text-muted);
+        background: transparent;
+        cursor: pointer;
+        font-size: 21px;
+        line-height: 1;
+      }
+
+      .clear-query:hover { background: var(--surface-hover); }
+
+      .clear-query[hidden] { display: none; }
+
+      .actions {
+        margin-top: 28px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .search-button {
+        min-height: 36px;
+        padding: 0 16px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        color: var(--text-muted);
+        background: var(--surface-soft);
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+      }
+
+      .search-button:hover {
+        border-color: var(--border);
+        box-shadow: var(--button-shadow);
+      }
+
+      .search-button:active { background: var(--surface-hover); }
+
+      .ai-link {
+        min-height: 36px;
+        padding: 0 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--link);
+        background: var(--surface);
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .ai-link:hover {
+        background: var(--surface-soft);
+        box-shadow: var(--button-shadow);
+        text-decoration: none;
+      }
+
+      .ai-link svg { width: 17px; height: 17px; }
+
+      .workspace-links {
+        width: min(100%, 720px);
+        margin-top: 30px;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .workspace-link {
+        width: 76px;
+        min-height: 78px;
+        padding: 8px 4px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 12px;
+        color: var(--text-muted);
+        font-size: 11px;
+        text-align: center;
+        transition: background-color 140ms ease;
+      }
+
+      .workspace-link:hover {
+        background: var(--surface-hover);
+        text-decoration: none;
+      }
+
+      .workspace-link svg { width: 30px; height: 30px; flex: 0 0 auto; }
+
+      .provider {
+        margin: 28px 0 0;
+        color: var(--text-subtle);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .provider a { color: var(--link); }
+
+      .keyboard-hint {
+        margin-top: 15px;
+        color: var(--text-faint);
+        font-size: 11px;
+      }
+
+      kbd {
+        padding: 2px 5px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-muted);
+        background: var(--surface-soft);
+        font: inherit;
+      }
+
+      footer {
+        color: var(--text-subtle);
+        background: var(--footer-bg);
+        font-size: 13px;
+      }
+
+      .footer-country {
+        min-height: 48px;
+        padding: 0 30px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .footer-links {
+        min-height: 46px;
+        padding: 0 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .footer-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 26px;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+      }
+
+      .query:focus-visible { outline: 0; }
+      .query::-webkit-search-cancel-button { display: none; }
+
+      /* Perplexity-inspired navigation, spacing, and prompt composer. */
+      body { display: grid; grid-template-columns: 232px minmax(0, 1fr); grid-template-rows: 68px minmax(0, 1fr); min-height: 100vh; }
+      .sidebar { grid-column: 1; grid-row: 1 / 3; display: flex; flex-direction: column; padding: 22px 14px; border-right: 1px solid var(--border); background: var(--page-bg); }
+      .side-brand { display: flex; align-items: center; gap: 10px; margin: 2px 8px 28px; color: var(--text); font-size: 19px; font-weight: 720; letter-spacing: -.6px; }
+      .brand-mark { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 9px; color: #fff; background: #202124; font-size: 13px; letter-spacing: -1px; }
+      :root[data-theme="dark"] .brand-mark { color: #17171b; background: #f1f0f5; }
+      .side-new { display: flex; align-items: center; gap: 10px; min-height: 42px; margin: 0 3px 20px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface); font: inherit; font-size: 13px; cursor: pointer; }
+      .side-new:hover, .side-nav a:hover { background: var(--surface-hover); text-decoration: none; }
+      .side-nav { display: grid; gap: 4px; }
+      .side-nav a { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 12px; border-radius: 10px; color: var(--text-muted); font-size: 13px; }
+      .side-nav a:first-child { color: var(--text); background: var(--surface-hover); }
+      .side-icon { width: 17px; color: var(--text-subtle); text-align: center; font-size: 16px; }
+      .side-caption { margin: 28px 12px 9px; color: var(--text-faint); font-size: 10px; font-weight: 650; letter-spacing: 1px; text-transform: uppercase; }
+      .side-bottom { margin-top: auto; padding: 12px; color: var(--text-faint); font-size: 11px; line-height: 1.55; }
+      .topbar { grid-column: 2; grid-row: 1; min-height: 68px; justify-content: flex-end; border: 0; padding-inline: 28px; }
+      .topbar::before, .topbar::after { display: none; }
+      .topbar a:not(.sign-in) { display: none; }
+      main { grid-column: 2; grid-row: 2; justify-content: center; align-items: center; padding: 48px 24px 72px; }
+      .tagline { margin: 0 0 32px; font-size: clamp(27px, 3.5vw, 38px); font-weight: 600; letter-spacing: -1.25px; text-align: center; }
+      .tagline::after { content: none; }
+      .tagline { font-size: clamp(27px, 3.5vw, 38px); }
+      .search-form { width: min(100%, 740px); }
+      .search-box { height: 164px; position: relative; flex-wrap: wrap; align-content: flex-start; padding: 20px 21px 56px; border-radius: 20px; background: var(--surface); box-shadow: 0 2px 12px rgb(30 25 60 / 5%); }
+      .search-box:hover, .search-box:focus-within { border-color: var(--search-border); box-shadow: 0 5px 24px rgb(30 25 60 / 9%); }
+      .search-icon { margin-top: 1px; }
+      .query { height: 32px; font-size: 15px; }
+      .clear-query { margin-left: auto; }
+      .search-box::after { content: "Web  ·  Jawaban dengan sumber"; position: absolute; left: 21px; bottom: 18px; color: var(--text-subtle); font-size: 12px; }
+      .actions { justify-content: flex-end; align-items: center; margin-top: 12px; gap: 8px; }
+      .search-button { min-height: 34px; border-radius: 18px; }
+      .search-button:first-child { order: 2; min-width: 38px; width: 38px; padding: 0; border-radius: 50%; color: transparent; font-size: 0; position: relative; }
+      .search-button:first-child::after { content: "↑"; position: absolute; inset: 0; display: grid; place-items: center; color: white; font-size: 20px; }
+      .search-button:nth-child(2) { display: none; }
+      .ai-link { margin: 0 auto 0 0; border-radius: 18px; color: var(--text-muted); }
+      .workspace-links { width: min(100%, 740px); margin-top: 43px; padding-top: 20px; }
+      .workspace-links::before { content: "Aplikasi Google"; }
+      .workspace-link { width: 80px; }
+      .provider { margin-top: 26px; font-size: 11px; }
+      footer { display: none; }
+      @media (max-width: 760px) {
+        body { display: flex; }
+        .sidebar { display: none; }
+        .topbar { min-height: 58px; padding-inline: 18px; }
+        main { padding: 80px 20px 58px; }
+        .workspace-links { margin-top: 34px; }
+      }
+
+      /* Gaya antarmuka tanya-jawab AI untuk ITPIO Search */
+      :root {
+        --page-bg: #fbfbfd;
+        --text: #202124;
+        --text-muted: #62636b;
+        --text-subtle: #777985;
+        --text-faint: #9294a0;
+        --border: #e6e6eb;
+        --search-border: #dedee6;
+        --surface: #fff;
+        --surface-soft: #f5f5f8;
+        --surface-hover: #ededf3;
+        --footer-bg: #f7f7f9;
+        --link: #6546d8;
+        --primary: #6546d8;
+        --primary-hover: #5134bf;
+        --focus: #7657e8;
+        --search-shadow: 0 8px 28px rgb(30 25 60 / 9%);
+      }
+      :root[data-theme="dark"] {
+        --page-bg: #17171b;
+        --text: #f1f0f5;
+        --text-muted: #c0bfca;
+        --text-subtle: #a09eaa;
+        --text-faint: #888692;
+        --border: #35343d;
+        --search-border: #45434f;
+        --surface: #222127;
+        --surface-soft: #24232a;
+        --surface-hover: #302e38;
+        --footer-bg: #1c1b20;
+        --link: #b3a0ff;
+        --primary: #8064ed;
+        --primary-hover: #947df1;
+        --primary-text: #fff;
+        --focus: #b3a0ff;
+        --search-shadow: 0 8px 28px rgb(0 0 0 / 30%);
+      }
+      body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .topbar {
+        min-height: 72px; justify-content: flex-end; gap: 20px;
+        border-bottom: 1px solid var(--border); padding-inline: clamp(20px, 5vw, 64px);
+      }
+      .topbar::before {
+        content: "ITPIO"; margin-right: auto; color: var(--text); font-size: 20px;
+        font-weight: 750; letter-spacing: -.8px;
+      }
+      .topbar::after {
+        content: "SEARCH"; position: absolute; left: clamp(76px, calc(5vw + 64px), 128px);
+        margin-top: 23px; color: var(--text-faint); font-size: 9px; font-weight: 700;
+        letter-spacing: 1.7px;
+      }
+      main { align-items: center; padding: clamp(72px, 13vh, 138px) 24px 92px; }
+      .brand { display: none; }
+      .tagline { margin: 0 0 34px; color: var(--text); font-size: clamp(28px, 4vw, 42px); font-weight: 650; letter-spacing: -1.4px; }
+      .tagline::after { content: "Tanyakan apa saja."; }
+      .tagline { font-size: 0; }
+      .tagline::after { font-size: clamp(28px, 4vw, 42px); }
+      .search-form { width: min(100%, 720px); }
+      .search-box {
+        height: 132px; align-items: flex-start; padding: 20px 22px; gap: 12px;
+        border: 1px solid var(--search-border); border-radius: 22px; box-shadow: 0 2px 8px rgb(30 25 60 / 4%);
+      }
+      .search-box:hover, .search-box:focus-within { border-color: var(--primary); box-shadow: var(--search-shadow); }
+      .search-icon { margin-top: 2px; color: var(--primary); }
+      .query { height: 34px; align-self: flex-start; font-size: 16px; }
+      .clear-query { margin-left: auto; }
+      .actions { justify-content: flex-start; margin-top: 13px; gap: 8px; }
+      .search-button, .ai-link { min-height: 35px; padding-inline: 13px; border-radius: 18px; font-size: 13px; }
+      .search-button:first-child { color: #fff; background: var(--primary); }
+      .search-button:first-child:hover { background: var(--primary-hover); }
+      .ai-link { margin-left: auto; color: var(--text-muted); }
+      .workspace-links { width: min(100%, 720px); justify-content: flex-start; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+      .workspace-links::before { content: "Aplikasi untuk mulai bekerja"; width: 100%; margin: 0 0 12px 8px; color: var(--text-subtle); font-size: 12px; }
+      .workspace-link { width: 82px; }
+      .provider { margin-top: 34px; }
+      .keyboard-hint { display: none; }
+      footer { display: none; }
+
+      @media (max-width: 560px) {
+        .topbar { min-height: 58px; padding: 6px 18px; gap: 16px; }
+        main { padding: 76px 20px 64px; }
+        .brand { font-size: clamp(64px, 22vw, 82px); }
+        .tagline { margin-top: 12px; margin-bottom: 25px; }
+        .actions { margin-top: 24px; }
+        .workspace-links { margin-top: 22px; }
+        .workspace-link { width: 68px; }
+        .provider { max-width: 280px; line-height: 1.6; }
+        .keyboard-hint { display: none; }
+        .footer-country { padding: 0 22px; }
+        .footer-links { align-items: flex-start; flex-direction: column; padding: 17px 22px; }
+        .footer-group { gap: 16px 22px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+
+      /* Final layout overrides */
+      body { display: grid; grid-template-columns: 232px minmax(0, 1fr); grid-template-rows: 68px minmax(0, 1fr); }
+      .sidebar { grid-column: 1; grid-row: 1 / 3; display: flex; flex-direction: column; }
+      .topbar { grid-column: 2; grid-row: 1; justify-content: flex-end; border: 0; padding-inline: 28px; }
+      .topbar::before, .topbar::after, .topbar a:not(.sign-in) { display: none; }
+      main { grid-column: 2; grid-row: 2; justify-content: center; align-items: center; padding: 48px 24px 72px; }
+      .tagline { font-size: clamp(27px, 3.5vw, 38px); text-align: center; }
+      .tagline::after { content: none; }
+      .brand { display: flex; margin: 0 0 20px; color: var(--text); font-size: 20px; font-weight: 700; letter-spacing: -1px; }
+      .brand .blue, .brand .red, .brand .yellow, .brand .green { color: var(--text); }
+      .search-form { width: min(100%, 740px); }
+      .search-box { height: 164px; position: relative; flex-wrap: wrap; align-content: flex-start; padding: 20px 21px 56px; border-radius: 20px; }
+      .search-box::after { content: "Web  ·  Jawaban dengan sumber"; position: absolute; left: 21px; bottom: 18px; color: var(--text-subtle); font-size: 12px; }
+      .query { height: 32px; }
+      .actions { justify-content: flex-end; align-items: center; margin-top: 12px; gap: 8px; }
+      .search-button:first-child { order: 2; min-width: 38px; width: 38px; padding: 0; border-radius: 50%; color: transparent; font-size: 0; position: relative; }
+      .search-button:first-child::after { content: "↑"; position: absolute; inset: 0; display: grid; place-items: center; color: white; font-size: 20px; }
+      .search-button:nth-child(2) { display: none; }
+      .ai-link { margin: 0 auto 0 0; }
+      .workspace-links { width: min(100%, 740px); margin-top: 43px; padding-top: 20px; }
+      .workspace-links::before { content: "Aplikasi Google"; }
+      .provider { margin-top: 26px; font-size: 11px; }
+      footer { display: none; }
+      @media (max-width: 760px) {
+        body { display: flex; }
+        .sidebar { display: none; }
+        .topbar { min-height: 58px; padding: 6px 18px; }
+        main { padding: 80px 20px 58px; }
+        .workspace-links { margin-top: 34px; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Menu ITPIO Search">
+      <a class="side-brand" href="index.html"><span class="brand-mark">I</span><span>ITPIO</span></a>
+      <button class="side-new" id="new-search" type="button"><span aria-hidden="true">＋</span> Pencarian baru</button>
+      <nav class="side-nav" aria-label="Navigasi">
+        <a href="index.html"><span class="side-icon" aria-hidden="true">⌂</span>Beranda</a>
+        <a href="https://www.perplexity.ai/discover" target="_blank" rel="noreferrer"><span class="side-icon" aria-hidden="true">◉</span>Temukan</a>
+        <a href="https://gemini.google.com/" target="_blank" rel="noreferrer"><span class="side-icon" aria-hidden="true">▤</span>Ruang AI</a>
+      </nav>
+      <p class="side-caption">Perpustakaan</p>
+      <nav class="side-nav" aria-label="Perpustakaan">
+        <a href="https://myactivity.google.com/" target="_blank" rel="noreferrer"><span class="side-icon" aria-hidden="true">◷</span>Riwayat pencarian</a>
+      </nav>
+      <div class="side-bottom">ITPIO Search<br />Pencarian web dengan Google</div>
+    </aside>
+    <header class="topbar" aria-label="Navigasi utama">
+      <a href="https://mail.google.com/" target="_blank" rel="noreferrer">Gmail</a>
+      <a href="https://images.google.com/" target="_blank" rel="noreferrer">Gambar</a>
+      <button
+        class="theme-toggle"
+        id="theme-toggle"
+        type="button"
+        aria-label="Aktifkan mode gelap"
+        aria-pressed="false"
+        title="Aktifkan mode gelap"
+      >
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20.2 15.8A8.2 8.2 0 0 1 8.2 3.8 8.2 8.2 0 1 0 20.2 15.8Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8" />
+        </svg>
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8" />
+          <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+        </svg>
+      </button>
+      <a class="sign-in" href="https://accounts.google.com/" target="_blank" rel="noreferrer">Masuk</a>
+    </header>
+
+    <main>
+      <h1 class="brand" aria-label="ITPIO">
+        <span class="blue">I</span><span class="red">T</span><span class="yellow">P</span><span class="blue">I</span><span class="green">O</span>
+      </h1>
+      <p class="tagline">Tanyakan apa saja.</p>
+
+      <form class="search-form" action="https://www.google.com/search" method="get" role="search">
+        <div class="search-box">
+          <label class="sr-only" for="query">Cari apa saja di web</label>
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8" />
+            <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+          </svg>
+          <input
+            class="query"
+            id="query"
+            name="q"
+            type="search"
+            placeholder="Cari apa saja di web"
+            enterkeyhint="search"
+          />
+          <button class="clear-query" type="button" aria-label="Hapus kata kunci" hidden>×</button>
+        </div>
+        <div class="actions">
+          <button class="search-button" type="submit">Cari dengan ITPIO</button>
+          <button class="search-button" type="submit" name="btnI" value="I'm Feeling Lucky">Lagi beruntung</button>
+          <a class="ai-link" href="https://gemini.google.com/" target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2.8c1.2 4.8 3.4 7 8.2 8.2-4.8 1.2-7 3.4-8.2 8.2-1.2-4.8-3.4-7-8.2-8.2 4.8-1.2 7-3.4 8.2-8.2Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7" />
+            </svg>
+            Chat with AI
+          </a>
+        </div>
+      </form>
+
+      <nav class="workspace-links" aria-label="Aplikasi Google Workspace">
+        <a class="workspace-link" href="https://docs.google.com/document/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#4285f4" d="M7 3h12l7 7v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path fill="#a1c2fa" d="M19 3v7h7"/><path fill="none" stroke="#fff" stroke-linecap="round" stroke-width="1.6" d="M10 16h12M10 20h12M10 24h8"/></svg>
+          <span>Docs</span>
+        </a>
+        <a class="workspace-link" href="https://drive.google.com/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#00832d" d="m10.2 4.5 5 0-9.1 15.8-2.5 4.3-2.5-4.3z"/><path fill="#ffba00" d="m10.2 4.5 5 0 9.1 15.8h-5z"/><path fill="#0066da" d="M8.6 20.3h17.8l-2.5 4.3H6.1z"/><path fill="#2684fc" d="m24.3 20.3 2.5 4.3 2.5-4.3-9.1-15.8h-5z" opacity=".9"/></svg>
+          <span>Drive</span>
+        </a>
+        <a class="workspace-link" href="https://docs.google.com/spreadsheets/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#34a853" d="M7 3h12l7 7v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path fill="#a8dab5" d="M19 3v7h7"/><path fill="none" stroke="#fff" stroke-width="1.5" d="M10 15h12v10H10zM10 20h12m-6-5v10"/></svg>
+          <span>Sheets</span>
+        </a>
+        <a class="workspace-link" href="https://docs.google.com/presentation/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#fbbc04" d="M7 3h12l7 7v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path fill="#fde293" d="M19 3v7h7"/><rect x="9" y="14" width="14" height="10" rx="1.5" fill="#fff"/></svg>
+          <span>Slides</span>
+        </a>
+        <a class="workspace-link" href="https://mail.google.com/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="6" width="26" height="20" rx="4" fill="#fff"/><path fill="#4285f4" d="M3 10v12a4 4 0 0 0 4 4h2V13z"/><path fill="#34a853" d="M23 26h2a4 4 0 0 0 4-4V10l-6 3z"/><path fill="#fbbc04" d="M3 10v2l6 5v-4z"/><path fill="#ea4335" d="m3 10 13 10 13-10a4 4 0 0 0-6-3l-7 5-7-5a4 4 0 0 0-6 3Z"/></svg>
+          <span>Gmail</span>
+        </a>
+        <a class="workspace-link" href="https://calendar.google.com/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="6" width="22" height="23" rx="4" fill="#4285f4"/><path fill="#aecbfa" d="M5 11h22v3H5z"/><path fill="#fff" d="M11 17h10v8H11z"/><path fill="#1a73e8" d="M14 19h4v4h-4z"/><path fill="#1967d2" d="M10 3h3v7h-3zm9 0h3v7h-3z"/></svg>
+          <span>Calendar</span>
+        </a>
+        <a class="workspace-link" href="https://meet.google.com/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="7" width="20" height="18" rx="5" fill="#00832d"/><path fill="#00ac47" d="M3 12a5 5 0 0 1 5-5h10v9H3z"/><path fill="#2684fc" d="m23 13 6-4v14l-6-4z"/><path fill="#ffba00" d="M3 20h15v5H8a5 5 0 0 1-5-5Z"/></svg>
+          <span>Meet</span>
+        </a>
+        <a class="workspace-link" href="https://forms.google.com/" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#673ab7" d="M7 3h12l7 7v18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path fill="#b39ddb" d="M19 3v7h7"/><circle cx="11" cy="16" r="1.3" fill="#fff"/><path stroke="#fff" stroke-linecap="round" stroke-width="1.5" d="M15 16h6m-10 4h10m-10 4h10"/></svg>
+          <span>Forms</span>
+        </a>
+      </nav>
+
+      <p class="provider">Hasil pencarian web disediakan oleh <a href="https://www.google.com/" target="_blank" rel="noreferrer">Google</a>.</p>
+      <p class="keyboard-hint">Tekan <kbd>/</kbd> untuk mulai mencari</p>
+    </main>
+
+    <footer>
+      <div class="footer-country">Indonesia</div>
+      <nav class="footer-links" aria-label="Informasi">
+        <div class="footer-group">
+          <a href="https://support.google.com/websearch/?hl=id" target="_blank" rel="noreferrer">Bantuan Penelusuran</a>
+        </div>
+        <div class="footer-group">
+          <a href="https://policies.google.com/privacy?hl=id" target="_blank" rel="noreferrer">Privasi Google</a>
+          <a href="https://policies.google.com/terms?hl=id" target="_blank" rel="noreferrer">Persyaratan</a>
+        </div>
+      </nav>
+    </footer>
+
+    <script>
+      const query = document.querySelector("#query");
+      const clearButton = document.querySelector(".clear-query");
+      const themeToggle = document.querySelector("#theme-toggle");
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+      const newSearchButton = document.querySelector("#new-search");
+
+      const getSavedTheme = () => {
+        try {
+          const savedTheme = window.localStorage.getItem("itpio-theme");
+          return savedTheme === "dark" || savedTheme === "light" ? savedTheme : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const setTheme = (theme, save = false) => {
+        const isDark = theme === "dark";
+        document.documentElement.dataset.theme = isDark ? "dark" : "light";
+        themeToggle.setAttribute("aria-pressed", String(isDark));
+
+        const actionLabel = isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap";
+        themeToggle.setAttribute("aria-label", actionLabel);
+        themeToggle.title = actionLabel;
+        themeColor.setAttribute("content", isDark ? "#202124" : "#ffffff");
+
+        if (save) {
+          try {
+            window.localStorage.setItem("itpio-theme", isDark ? "dark" : "light");
+          } catch {
+            // Mode tetap dapat diganti; hanya penyimpanan preferensi yang dilewati.
+          }
+        }
+      };
+
+      const savedTheme = getSavedTheme();
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      setTheme(savedTheme || systemTheme);
+      themeToggle.addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        setTheme(nextTheme, true);
+      });
+
+      const updateClearButton = () => {
+        clearButton.hidden = query.value.length === 0;
+      };
+
+      query.addEventListener("input", updateClearButton);
+      newSearchButton.addEventListener("click", () => {
+        query.value = "";
+        updateClearButton();
+        query.focus();
+      });
+      clearButton.addEventListener("click", () => {
+        query.value = "";
+        updateClearButton();
+        query.focus();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        const typing = event.target instanceof HTMLElement &&
+          (event.target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName));
+
+        if (event.key === "/" && !typing && !event.altKey && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
+          query.focus();
+        }
+
+        if (event.key === "Escape" && document.activeElement === query && query.value) {
+          query.value = "";
+          updateClearButton();
+        }
+      });
+    </script>
+  </body>
+</html>
